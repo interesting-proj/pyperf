@@ -40,6 +40,7 @@ def process_client(opt, args):
         s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, opt.window)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, opt.window)
     s.connect((opt.connect_to_hostname, opt.portnumber))
+    
 
     t = time.time()
     transferred = 0
