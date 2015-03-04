@@ -1,5 +1,6 @@
 import socket
 import time
+import sys
 from optparse import OptionParser
 
 PORT=55555
@@ -40,7 +41,7 @@ def process_client(opt, args):
         s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, opt.window)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, opt.window)
     s.connect((opt.connect_to_hostname, opt.portnumber))
-    
+
 
     t = time.time()
     transferred = 0
@@ -69,17 +70,17 @@ opt,args = parser.parse_args()
 
 if opt.server_mode and opt.connect_to_hostname:
     print "-s and -c are mutually exclusive"
-    exit(-1)
+    sys.exit(-1)
 
 
 if opt.server_mode:
     process_server(opt, args)
-    exit(0)
+    sys.exit(0)
 
 if opt.connect_to_hostname:
     process_client(opt, args)
-    exit(0)
+    sys.exit(0)
 
 print "-s or -c has to be selected"
-exit(-1)
+sys.exit(-1)
 
