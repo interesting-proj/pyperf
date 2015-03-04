@@ -1,6 +1,8 @@
 import socket
 import time
 import sys
+import hashlib
+
 from optparse import OptionParser
 
 PORT=55555
@@ -15,7 +17,12 @@ def process_server(opt, args):
         s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, opt.window)
     s.listen(1)
 
+
+
     while True:
+        if opt.checksum:
+            xsum = hashlib.md5()
+
         conn, addr = s.accept()
         print "Connection from", addr[0], "port", addr[1]
         t = time.time()
@@ -26,11 +33,17 @@ def process_server(opt, args):
             if not data:
                 break
             transferred += len(data)
+            if opt.checksum:
+                xsum.update(data)
+
         t_total = time.time() - t
         conn.close()
 
         print "Received", transferred, "bytes in", t_total, "seconds"
         print "Speed", transferred/t_total, "B/sec", transferred/t_total/1024, "KB/sec",transferred/t_total/(1024*1024), "MB/sec"
+        if opt.checksum:
+            print "Checksum", xsum.hexdigest()
+
 
 def process_client(opt, args):
     print "Entering Client mode"
@@ -42,17 +55,25 @@ def process_client(opt, args):
         s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, opt.window)
     s.connect((opt.connect_to_hostname, opt.portnumber))
 
+    if opt.checksum:
+        xsum = hashlib.md5()
+
 
     t = time.time()
     transferred = 0
     while time.time() - t < opt.time:
         s.send(buf)
         transferred += opt.buflen
+        if opt.checksum:
+            xsum.update(buf)
+
 
     t_total = time.time() - t
     s.close()
     print "Transferred", transferred, "bytes in", t_total, "seconds"
     print "Speed", transferred/t_total, "B/sec", transferred/t_total/1024, "KB/sec",transferred/t_total/(1024*1024), "MB/sec"
+    if opt.checksum:
+        print "Checksum", xsum.hexdigest()
 
 
 
@@ -60,7 +81,7 @@ parser = OptionParser()
 parser.add_option('-s', '--server', action="store_true", dest="server_mode")
 parser.add_option('-c', '--client', action="store", type="string", dest="connect_to_hostname")
 
-
+parser.add_option('-X', '--checksum', action="store_true", dest="checksum")
 parser.add_option('-W', '--window', type='int', dest='window')
 parser.add_option('-B', '--bind', dest="bind_to_host", type="string", default='')
 parser.add_option('-l', '--len', dest="buflen", type="int", default=8192)
