@@ -15,6 +15,9 @@ def process_server(opt, args):
     if opt.window:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, opt.window)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, opt.window)
+
+    print "TCP Window size RECV:", s.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF), "SEND:", s.getsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF)
+
     s.listen(1)
 
 
@@ -25,7 +28,7 @@ def process_server(opt, args):
 
         conn, addr = s.accept()
         print "Connection from", addr[0], "port", addr[1]
-        t = time.time()
+        t_start = time.time()
         transferred = 0
 
         while True:
@@ -36,7 +39,7 @@ def process_server(opt, args):
             if opt.checksum:
                 xsum.update(data)
 
-        t_total = time.time() - t
+        t_total = time.time() - t_start
         conn.close()
 
         print "Received", transferred, "bytes in", t_total, "seconds"
@@ -53,22 +56,25 @@ def process_client(opt, args):
     if opt.window:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, opt.window)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, opt.window)
+
+    print "TCP Window size RECV:", s.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF), "SEND:", s.getsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF)
+
     s.connect((opt.connect_to_hostname, opt.portnumber))
 
     if opt.checksum:
         xsum = hashlib.md5()
 
 
-    t = time.time()
+    t_start = time.time()
     transferred = 0
-    while time.time() - t < opt.time:
+    while time.time() - t_start < opt.time:
         s.send(buf)
         transferred += opt.buflen
         if opt.checksum:
             xsum.update(buf)
 
 
-    t_total = time.time() - t
+    t_total = time.time() - t_start
     s.close()
     print "Transferred", transferred, "bytes in", t_total, "seconds"
     print "Speed", transferred/t_total, "B/sec", transferred/t_total/1024, "KB/sec",transferred/t_total/(1024*1024), "MB/sec"
