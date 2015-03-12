@@ -1,7 +1,10 @@
 import socket
 import time
 import sys
-import hashlib
+try:
+    import hashlib
+except ImportError:
+    hashlib = False
 
 from optparse import OptionParser
 
@@ -87,7 +90,9 @@ parser = OptionParser()
 parser.add_option('-s', '--server', action="store_true", dest="server_mode")
 parser.add_option('-c', '--client', action="store", type="string", dest="connect_to_hostname")
 
-parser.add_option('-X', '--checksum', action="store_true", dest="checksum")
+if hashlib:
+    parser.add_option('-X', '--checksum', action="store_true", dest="checksum")
+
 parser.add_option('-W', '--window', type='int', dest='window')
 parser.add_option('-B', '--bind', dest="bind_to_host", type="string", default='')
 parser.add_option('-l', '--len', dest="buflen", type="int", default=8192)
